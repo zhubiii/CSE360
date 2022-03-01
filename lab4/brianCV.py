@@ -27,7 +27,7 @@ print('processing...')
 for frame in cam.capture_continuous(rawCapture, format='bgr', use_video_port=True):
     frame = frame.array
 
-    # Threshold of blue in HSV space
+    # Threshold of blue in BGR space
     lower_blue = np.array([100, 0, 0])
     upper_blue = np.array([255, 150, 100])
     
