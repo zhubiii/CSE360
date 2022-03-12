@@ -1,3 +1,17 @@
+# Lab 6 Report
+
+## Two advantages and disadvantages of teleoperation
+### Advantages
+- It is extremely simple and intuitive to get the robot from one start position to a goal position. There is no need for complex algorithms or control systems
+- A human operator can respond to edge cases and allow dynamic response to situations that would be difficult to be hard coded. Even something as simple as lining up to the start line and starting at the same time is much easier with a human operator
+### Disadvantages
+- The latency between the input command and the actual action of the robot makes it difficult to operate the vehicle accurately and precisely
+- If the conncection is unstable and becomes disconnected, the robot cannot take any action
+
+## Plot
+- note that the data collection stopped in the middle of the run so it is partially incomplete
+- Code to make the plot is shown below:
+```
 from numpy import *
 import matplotlib.pyplot as plt
 
@@ -61,3 +75,5 @@ plt.grid()
 plt.plot(pose_log[:,0], pose_log[:,1])
 plt.savefig('plot.png')
 plt.show()
+```
+![image](plot.png "trajectory")
