@@ -1,0 +1,186 @@
+\documentclass[10pt]{article}
+ \usepackage{graphicx}
+ \usepackage[tight]{subfigure}
+ \usepackage{amssymb}
+ \usepackage{mathtools}
+ \usepackage{amsmath}
+ \usepackage{clrscode}
+ \usepackage{algorithmicx}
+\usepackage{algorithm}
+\usepackage[noend]{algpseudocode}
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage{hyperref}
+\usepackage{color}
+
+\definecolor{dkgreen}{rgb}{0,0.6,0}
+\definecolor{gray}{rgb}{0.5,0.5,0.5}
+\definecolor{mauve}{rgb}{0.58,0,0.82}
+
+\lstset{frame=tb,
+  language=Python,
+  aboveskip=3mm,
+  belowskip=3mm,
+  showstringspaces=false,
+  columns=flexible,
+  basicstyle={\small\ttfamily},
+  numbers=none,
+  numberstyle=\tiny\color{gray},
+  keywordstyle=\color{blue},
+  commentstyle=\color{dkgreen},
+  stringstyle=\color{mauve},
+  breaklines=true,
+  breakatwhitespace=true,
+  tabsize=3
+}
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    filecolor=magenta,      
+    urlcolor=cyan,
+    pdftitle={Overleaf Example},
+    pdfpagemode=FullScreen,
+    }
+
+\urlstyle{same}
+
+
+\algrenewcommand{\algorithmiccomment}[1]{ \{ #1 \} }
+
+\newif\ifboldnumber
+\newcommand{\boldnext}{\global\boldnumbertrue}
+
+ \setlength{\oddsidemargin} {0 in}
+\setlength{\textwidth} {6.5 in}
+\setlength{\textheight} {8.5 in}
+\setlength{\topmargin} {-0.5 in}
+\def\h{\hspace{-.9pt}{\_}}
+\newcommand{\reminder}[1]{ [[[ \marginpar{\mbox{$<==$}} #1 ]]] }
+\newcommand{\eatreminders}[0]{\renewcommand{\reminder}[1]{}}
+\newcommand\quoted[1]{``#1''}
+\author{Brian Zhu\\
+\url{https://github.com/zhubiii/CSE360} }
+\date{}
+\title{CSE 360: Workshop 2\\
+}
+\begin{document}
+
+\maketitle
+ 
+\begin{enumerate}
+   \item
+   \begin{itemize}
+     \item The camera takes a 14x8 picture. $(u_0=7,v_0=4)$ represent the optical center.
+     \item We simply use the equations that convert plane coordinates to pixel coordinates $u=u_0+\frac{k_ufX_c}{Z_c}$ and $v=v_0+\frac{k_vfY_c}{Z_c}$ and $(u=12,v=6)$
+     \begin{itemize}
+        \item $12=7+\frac{(21)(1)X_c}{15} \implies X_c=\frac{75}{21}=3.57$ 
+        \item $6=4+\frac{(11)(1)Y_c}{15} \implies Y_c=\frac{30}{11}=2.73$
+     \end{itemize}
+     \item We know that a rotation matrix can transform a point from one frame to another
+     \item $^qR_cp_c=p_q \implies
+      \begin{bmatrix}
+       cos(\pi/2) & 0 & sin(\pi/2) \\
+       0 & 1 & 0 \\
+       -sin(\pi/2) & 0 & cos(\pi/2)
+      \end{bmatrix}
+      \begin{bmatrix}
+       cos(-\pi/2) & -sin(-\pi/2) & 0 \\
+       sin(-\pi/2) & cos(-\pi/2) & 0 \\
+       0 & 0 & 1
+      \end{bmatrix}
+      \begin{bmatrix}
+        3.57\\
+        2.73\\
+        15
+      \end{bmatrix}
+      =
+      \begin{bmatrix}
+        15\\
+        -3.57\\
+        -2.73
+      \end{bmatrix}
+      $
+   \end{itemize}
+  \item We want to find $d_g$ and we know that the inverse of a Rotation matrix gives us the rotation matrix with the frames flipped with respect to each other
+  \begin{itemize}
+    \item $^qR^{T}_g {=} {^gR_q} \implies ^gR_qd_q=d_g$
+    \item $
+      \begin{bmatrix}
+       cos(-\pi/6) & -sin(-\pi/6) & 0 \\
+       sin(-\pi/6) & cos(-\pi/6) & 0 \\
+       0 & 0 & 1
+      \end{bmatrix}^T
+      \begin{bmatrix}
+        15\\
+        -1\\
+        -3
+      \end{bmatrix}
+      =
+      \begin{bmatrix}
+        \frac{15\sqrt{3} +1}{2}\\
+        \frac{-\sqrt{3} +15}{2}\\
+        -3
+      \end{bmatrix}
+      $
+  \end{itemize}
+  \item H-Transformation matrices have the same frame flipping inverse properties as rotation matrices  $^wT^T_q=^qT_w \implies {^wT^T_q}^wT_g=^qT_g$
+  \item
+  \begin{itemize}
+    \item Car 1
+    \begin{itemize}
+      \item For car 1, the rotation matrix and the position are both dependent on time
+      \item The rotation matrix, it will always rotate about the z-axis. The
+      position is a 180-degree rotation CCW which is $\pi/2$ according to right-hand rule
+      Therefore, the rotation at time $t=0$ is Rot($z, \pi/2$)
+      \item we know also need to get the rotation as a function of time. $v_1*t$ describes
+      it movement along the circumference. This can be referred to as the arc length. From This
+      we know how much theta has changed due to the arc length equation $\frac{ds}{r}=d\theta$ 
+      \item Therefore, the rotation matrix w.r.t. the \{0\} frame is Rot($z, \pi/2-\frac{(v_1*t)}{2}$)
+      \item To get the change in position we need to first define the position relative to the \{0\} frame at time 
+      $t=0$. This is simply $(1+2cos(\pi/2),1+2sin(\pi/2),3)$ 
+      \item To find the position as a function of time we utilize the same arc length formula
+      as we did for the rotation matrix which gives us the (x,y) position of a circle radius 2 
+      centered at (0,0). To offset we add 1 to x and y. Therefore, the position over time is $(1+2cos(\pi/2-\frac{v_1*t}{2}),1+2sin(\pi/2-\frac{v_1*t}{2}),3)$
+      \item Finally, to obtain the transformation matrix we combine our rotation and postion
+      \item $^0T_1=\begin{bmatrix}
+        cos(\pi/2-\frac{v_1*t}{2}) & -sin(\pi/2-\frac{v_1*t}{2}) & 0 & 1+2cos(\pi/2-\frac{v_1*t}{2})\\
+        sin(\pi/2-\frac{v_1*t}{2}) & cos(\pi/2-\frac{v_1*t}{2}) & 0 & 1+2sin(\pi/2-\frac{v_1*t}{2}) \\
+        0 & 0 & 1 & 3 \\
+        0 & 0 & 0 & 1
+      \end{bmatrix}
+      $
+    \end{itemize}
+    \item Car 2
+    \begin{itemize}
+      \item For car 2, the rotation is constant about the z-axis clockwise which is negative according to right-hand rule, so the rotation matrix
+      is described as Rot($z, -\pi/4$)
+      \item The starting position of car 2 at time $t=0$ is 
+      $(2cos(3\pi/4),2sin(3\pi/4),0)$ w.r.t. the center of the table. Multiplied by two due to the radius and 0 because its level with the tabletop
+      \item To get it with respect to frame \{0\} we simply subtract 1 from x and y
+      such that the starting position of car 2 is $(2cos(3\pi/4)-1, 2sin(3\pi/4)-1, 3)$. Note that the z is 3 now because that is the height of the table
+      \item the radius changes, however, so we need to put the radius term in terms of velocity of time. $((2-v_2*t)cos(3\pi/4)-1, (2-v_2*t)sin(3\pi/4)-1, 3)$
+      \item Finally, to obtain the transform matrix we combine our rotation matrix and position vector 
+      \item $^0T_2=\begin{bmatrix}
+        cos(-\pi/4) & -sin(-\pi/4) & 0 & (2-v_2*t)cos(3\pi/4)-1\\
+        sin(-\pi/4) & cos(-\pi/4) & 0 & (2-v_2*t)sin(3\pi/4)-1 \\
+        0 & 0 & 1 & 3 \\
+        0 & 0 & 0 & 1
+      \end{bmatrix}
+      $
+    \end{itemize}
+    \item to find the homogeneous matrix $^1T_2$ as a function of time we take
+    the inverse of $^0T_1$ and multiply it by $^0T_2$ such that $^1T_0{^0T_2}=^1T_2$
+    The inverse of a transform matrix is the transpose of the rotation matrix and then
+    multiplying the position vector by the negative transpose of the rotation matrix $-R^Tp$
+    \item $-R^Tp=\begin{bmatrix}
+      cos(\frac{v_1t}{2}) + sin(\frac{v_1t}{2}) + 2 \\
+      -cos(\frac{v_1t}{2}) + sin(\frac{v_1t}{2})  \\
+      3
+    \end{bmatrix}$
+    \item $^1T_2=\begin{bmatrix}
+
+    \end{bmatrix}
+    $
+  \end{itemize}
+\end{enumerate}
+\end{document}
