@@ -1,7 +1,6 @@
 import sys
 from math import *
 import time
-import numpy as np
 from NatNetClient import NatNetClient
 from util import quaternion_to_euler_angle_vectorized1
 import socket
@@ -30,9 +29,9 @@ def receive_rigid_body_frame(robot_id, position, rotation_quaternion):
 
 
 if __name__ == "__main__":
-    clientAddress = "192.168.0.22"
+    clientAddress = "192.168.0.22" # PUT IN YOUR IP HERE
     optitrackServerAddress = "192.168.0.4"
-    robot_id = 7
+    robot_id = 7 # PUT IN YOUR ROBOT ID HERE
 
     # This will create a new NatNet client
     streaming_client = NatNetClient()
@@ -46,66 +45,35 @@ if __name__ == "__main__":
     # This will run perpetually, and operate on a separate thread.
     is_running = streaming_client.run()
 
-    # x,y, rotation
-    xy_des = (3.8,0)
-    waypoints = [(5.33,3.58),(-4.27,3.357),(-4.27,-3), (5.458,-3.036)]
-    idx=4
+    # x desired
+    x_des = 2 # PUT IN YOUR DESIRED LOCATION HERE
 
     # Bound is max pwm input
     bound = 1500
 
-    # Radius for waypoints
-    radius = .5
-
     # P-Controller gain
-    k_v  = 1700
-    k_pr = 1200
+    kp  = 1000
 
+    # keep track of time
     t = 0.
     while is_running:
         try:
             if robot_id in positions:
-                theta = rotations[robot_id] * pi/180
-
-                i = idx%4
-                ## Lap around the track
-                if abs(waypoints[i][0]-positions[robot_id][0])<radius and abs(waypoints[i][1]-positions[robot_id][1])<radius:
-                    print('HIT WAYPOINT')
-                    idx+=1
-
-                x = waypoints[i][0]
-                y = waypoints[i][1]
-
-                ## Circular Trajectory
-                #x = 5.43+(1.5*cos(t))
-                #y = 0.055+(1.5*sin(t))
-                #print('(%f,%f)'%(x,y))
-
+                x_des = 2*cos(t) + 5
                 # P control for x
-                errx = x - positions[robot_id][0]
-                # P control for y
-                erry = y - positions[robot_id][1]
-                print('(%f,%f)'%(errx,erry))
-
-                # P control for rotation
-                alpha = atan2(erry, errx)
-                errw  = degrees(atan2(sin(alpha-theta), cos(alpha-theta)))
-                print(errw)
-                omega = k_pr*errw
-
-                v            = k_v*(sqrt(errx**2 + erry**2))
-                u           = np.array([v-omega, v+omega])
-                # set bound of motor input
-                u[u > 1500] = 1500
-                u[u < -1500] = -1500
+                errx = x_des - positions[robot_id][0]
+                print(errx)
+                u           = kp*errx
+                if u > bound: u = bound
+                if u < -bound: u = -bound
 
                 # Send control input to the motors
-                command = 'CMD_MOTOR#%d#%d#%d#%d\n'%(u[0], u[0], u[1], u[1])
+                command = 'CMD_MOTOR#%d#%d#%d#%d\n'%(u, u, u, u)
                 print(command)
                 s.send(command.encode('utf-8'))
 
                 time.sleep(.1)
-                t += .02
+                t += .1
         except KeyboardInterrupt:
             # STOP
             command = 'CMD_MOTOR#00#00#00#00\n'
