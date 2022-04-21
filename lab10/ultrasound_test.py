@@ -71,7 +71,7 @@ def receive_rigid_body_frame(robot_id, position, rotation_quaternion):
     rotations[robot_id] = rotz
 
 if __name__ == "__main__":
-    clientAddress = "192.168.0.22"
+    clientAddress = "192.168.0.6"
     optitrackServerAddress = "192.168.0.4"
     robot_id = 7
 
@@ -95,7 +95,7 @@ if __name__ == "__main__":
     k_pr = 1200
 
     # K determines how far we want to be from obstacle
-    K = 1.5
+    K = .5
 
     # Radius that determines if we are at waypoint
     radius = .3
@@ -108,6 +108,9 @@ if __name__ == "__main__":
     #waypoints = [(5.33,3.58),(-4.27,3.357),(-4.27,-3), (5.458,-3.036)]
     x = random.uniform(xMin, xMax)
     y = random.uniform(yMin, yMax)
+
+    # Store all of the detected obstacles
+    B = []
 
     distance = None
     t = 0
@@ -130,9 +133,13 @@ if __name__ == "__main__":
                     bx = px + distance*cos(theta)
                     by = py + distance*sin(theta)
                     b  = (bx, by)
+                    B.append(b)
                     # Obstacle avoidance vector
-                    errpbx = positions[robot_id][0] - b[0]
-                    errpby = positions[robot_id][1] - b[1]
+                    errpbx = None
+                    errpby = None
+                    for b in B:
+                        errpbx = positions[robot_id][0] - b[0]
+                        errpby = positions[robot_id][1] - b[1]
                     # Calculate norm-3
                     pbnorm3 = sqrt(errpbx**2 + errpby**2)**3
                     # Divide by norm 3 and multiply by distance constant K
@@ -157,7 +164,7 @@ if __name__ == "__main__":
                 # P control for rotation
                 alpha = atan2(erry, errx)
                 errw  = degrees(atan2(sin(alpha-theta), cos(alpha-theta)))
-                print(errw)
+                #print(errw)
                 omega = k_pr*errw
 
                 v            = k_v*(sqrt(errx**2 + erry**2))
@@ -168,7 +175,7 @@ if __name__ == "__main__":
 
                 # Send control input to the motors
                 command = 'CMD_MOTOR#%d#%d#%d#%d\n'%(u[0], u[0], u[1], u[1])
-                print(command)
+                #print(command)
                 s.send(command.encode('utf-8'))
 
                 # Write to file in this order:

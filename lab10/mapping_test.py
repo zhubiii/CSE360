@@ -64,12 +64,12 @@ def draw_measurement(robot_location, robot_orientation, ultrasound_distance):
                        robot_location[1] + ultrasound_distance * math.sin(robot_orientation)
 
     ui, uj = grid.point_to_indexes(ultrasound_point)
-    plt.plot([j-.5, uj-.5], [i-.5, ui-.5], 'r--')
+    #plt.plot([j-.5, uj-.5], [i-.5, ui-.5], 'r--')
 
     # There is no obstable in the cell where the robot is
     grid.matrix_map[int(i), int(j)] = 1
     # plot robot location
-    plt.plot(j - .5, i - .5, 'yo')
+    #plt.plot(j - .5, i - .5, 'yo')
 
 
 def measurements_to_cells(robot_location, robot_orientation, ultrasound_distance, k_dis=10):
