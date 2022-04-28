@@ -1,4 +1,4 @@
-import sys
+import networkx as nx
 from math import *
 import numpy as np
 from NatNetClient import NatNetClient
@@ -6,6 +6,39 @@ from util import quaternion_to_euler_angle_vectorized1
 import socket
 import time
 
+# Define the vertices
+vertices = [(1,[5.54,0]), (2,[3.66,0]), (3,[2.07,-1.41]), (4,[2.65,0]),
+    (5,[3.3,2.23]), (6,[1.41,0]), (7,[.82,.235]), (8,[1.45,2.42]),
+    (9,[.041,-1.34]), (10,[-.32,.214]), (11,[.276,.825]),(12,[.6,2.13]),
+    (13,[-.82,-.24]), (14,[-2.32, 2.03]), (15,[-2.52, .45])]
+
+# Define edges and their weights
+edges = [(1,2), (1,3), (1,5), (2,3), (2,4), (2,5), (4,3), (4,5), (4,6),
+        (6,7), (6,3), (5,8), (3,9), (9,10), (9,13), (7,10), (7,11),
+        (8,12), (8,14), (10, 13), (10, 11), (11,14), (11, 12), (12, 14),
+        (13, 15), (14, 15)]
+
+G = nx.Graph()
+
+# Add vertices
+for v in vertices: G.add_node(v[0])
+# Addd edges
+G.add_edges_from(edges)
+
+for (u,v) in G.edges:
+    ux,uy = vertices[u-1][1]
+    vx,vy = vertices[v-1][1]
+    w     =  sqrt((ux-vx)**2 + (uy-vy)**2)
+    G[u][v]['weight'] = w
+
+# Compute shortest path
+path = nx.shortest_path(G, source=6, target=13)
+print(path)
+
+
+'''
+Have robot drive the shortest path
+'''
 IP_ADDRESS = '192.168.0.207'
 
 # Connect to the robot
@@ -29,7 +62,7 @@ def receive_rigid_body_frame(robot_id, position, rotation_quaternion):
 
 
 if __name__ == "__main__":
-    clientAddress = "192.168.0.22"
+    clientAddress = "192.168.0.11"
     optitrackServerAddress = "192.168.0.4"
     robot_id = 7
 
@@ -45,11 +78,6 @@ if __name__ == "__main__":
     # This will run perpetually, and operate on a separate thread.
     is_running = streaming_client.run()
 
-    # x,y, rotation
-    xy_des = (3.8,0)
-    waypoints = [(5.33,3.58),(-4.27,3.357),(-4.27,-3), (5.458,-3.036)]
-    idx=4
-
     # Bound is max pwm input
     bound = 1500
 
@@ -60,31 +88,33 @@ if __name__ == "__main__":
     k_v  = 1700
     k_pr = 1200
 
+    #  idx for waypoints
+    idx = 0
+
     t = 0.
     while is_running:
         try:
             if robot_id in positions:
+                if idx == len(path)-1: exit(0)
+
                 theta = rotations[robot_id] * pi/180
 
-                i = idx%4
+                # waypoint idx
+                wayidx = path[idx]
+                # x,y desired
+                x, y  = vertices[wayidx-1][1]
+                print(x,y)
+
                 ## Lap around the track
-                if abs(waypoints[i][0]-positions[robot_id][0])<radius and abs(waypoints[i][1]-positions[robot_id][1])<radius:
+                if abs(x-positions[robot_id][0])<radius and abs(y-positions[robot_id][1])<radius:
                     print('HIT WAYPOINT')
                     idx+=1
-
-                x = waypoints[i][0]
-                y = waypoints[i][1]
-
-                ## Circular Trajectory
-                #x = 5.43+(1.5*cos(t))
-                #y = 0.055+(1.5*sin(t))
-                #print('(%f,%f)'%(x,y))
 
                 # P control for x
                 errx = x - positions[robot_id][0]
                 # P control for y
                 erry = y - positions[robot_id][1]
-                print('(%f,%f)'%(errx,erry))
+                #print('(%f,%f)'%(errx,erry))
 
                 # P control for rotation
                 alpha = atan2(erry, errx)
